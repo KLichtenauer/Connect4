@@ -2,15 +2,31 @@ package model;
 
 import java.util.Collection;
 
-public class Game implements Board{
+public class Game implements Board {
 
     String[][] gameBoard;
+    Player firstPlayer;
+    Player humanPlayer;
+    Player botPlayer;
+    int level;
 
-    public Game(){
+    public Game(boolean isFirstPlayerHuman) {
         createBoard();
+        level = 4;
+        setPlayers(isFirstPlayerHuman);
     }
 
-    private void createBoard(){
+    private void setPlayers(boolean isFirstPlayerHuman) {
+        humanPlayer = new Player();
+        botPlayer = new Player();
+        if (isFirstPlayerHuman) {
+            firstPlayer = humanPlayer;
+        } else {
+            firstPlayer = botPlayer;
+        }
+    }
+
+    private void createBoard() {
         gameBoard = new String[Board.ROWS][Board.COLS];
         for (int i = 0; i < gameBoard.length; i++) {
             for (int j = 0; j < gameBoard[0].length; j++) {
@@ -21,7 +37,7 @@ public class Game implements Board{
 
     @Override
     public Player getFirstPlayer() {
-        return null;
+        return firstPlayer;
     }
 
     @Override
@@ -36,7 +52,7 @@ public class Game implements Board{
 
     @Override
     public void setLevel(int level) {
-
+        this.level = level;
     }
 
     @Override
@@ -56,11 +72,21 @@ public class Game implements Board{
 
     @Override
     public Player getSlot(int row, int col) {
-        return null;
+        Player player;
+        String content = gameBoard[row][col];
+        if (content.equals("O")) {
+            player = botPlayer;
+        } else if (content.equals("X")) {
+            player = humanPlayer;
+        } else {
+            player = null;
+        }
+        return player;
     }
 
     @Override
     public Board clone() {
+        Board cloneBoard = new Game(humanPlayer == firstPlayer);
         return null;
     }
 
@@ -73,6 +99,6 @@ public class Game implements Board{
             }
             builder.append("\n");
         }
-        return null;
+        return builder.toString();
     }
 }
