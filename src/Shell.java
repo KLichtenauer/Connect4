@@ -17,10 +17,10 @@
                 String[] parts = input.split(" ");
                 switch (keyChar) {
                     case 'l':
-
+                        regulateLevel(parts, game);
                         break;
                     case 'm':
-                        regulateMove(parts);
+                        regulateMove(parts, game);
                         break;
                     case 'n':
                         game = new Game(true);
@@ -46,23 +46,37 @@
 
         }
 
-        private static void regulateMove(String[] parts) {
-            if(isInteger(parts[1])){
-                System.out.println("JUHU");
+        private static void regulateLevel(String[] parts, Game game) {
+            String toTransform = parts[1];
+            if(isInteger(toTransform) && gameInitialized(game)){
+                int level = Integer.parseInt(toTransform);
+                game.setLevel(level);
+            }
+        }
+
+        private static boolean gameInitialized(Game game) {
+            return game != null;
+        }
+
+        // TODO: 30.11.2021 noch sehr unschön! wahrschienlich mit excepiton
+        private static void regulateMove(String[] parts, Game game) {
+            String colo = parts[1];
+            if(isInteger(colo) && gameInitialized(game)){
+                int col = Integer.parseInt(colo);
+                game.move(col);
             }
         }
 
         private static boolean isInteger(String part) {
             boolean isInt = true;
             for (int i = 0; i < part.length(); i++) {
-                if (part.charAt(0) < '0' || part.charAt(0) > '9') {
+                if (part.charAt(i) < '0' || part.charAt(i) > '9') {
                     isInt = false;
-                    error("Method has to of the form MOVE i, " +
-                            "where i is an Integer!");
+                    error("Method has needs the form <MOVE i>, " +
+                            "with i as an Integer!");
                     break;
                 }
             }
-
             return isInt;
         }
 
