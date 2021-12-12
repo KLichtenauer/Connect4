@@ -1,32 +1,45 @@
+    import model.Board;
     import model.Game;
+    import model.Player;
 
-    import java.util.Scanner;
+    import java.io.BufferedReader;
+    import java.io.IOException;
+    import java.io.InputStreamReader;
 
+
+    /**
+     * Communicates with the user
+     */
     public class Shell {
+        private static final int INDEX_OF_VALUE = 1;
+
+        private Shell() {}
+
+        public static void main(String[] args) throws IOException {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            execute(reader);
+        }
 
 
-        // TODO: 29.11.2021 Prüfen ob Game initialisiert wurde
-        public static void main(String[] args) {
-            Game game = null;
-            Scanner scanner = new Scanner(System.in);
+        private static void execute(BufferedReader reader) throws IOException {
+            Board game = new Game(true);
             boolean programRunning = true;
             while (programRunning) {
                 System.out.print("connect4> ");
-                String input = scanner.nextLine();
+                String input = reader.readLine();
                 char keyChar = Character.toLowerCase(input.charAt(0));
                 String[] parts = input.split(" ");
                 switch (keyChar) {
                     case 'l':
-
-                        break;
+                        regulateLevel(parts, game);
                     case 'm':
-                        regulateMove(parts);
+                        game = regulateMove(parts, game);
                         break;
                     case 'n':
                         game = new Game(true);
                         break;
                     case 's':
-                        game = new Game(false);
+                        game = regulateSwitch(game);
                         break;
                     case 'w':
                         break;
@@ -43,13 +56,50 @@
                         error(errorMessage());
                 }
             }
-
         }
 
-        private static void regulateMove(String[] parts) {
-            if(isInteger(parts[1])){
-                System.out.println("JUHU");
+        private static Board regulateMove(String[] parts, Board game) {
+            int chosenCol = getValue(parts);
+            if(chosenCol >= 1 && chosenCol < 8) {
+                return game.move(chosenCol);
+            } else {
+                error("Given column is invalid.");
+                return null;
             }
+        }
+
+        private static void regulateLevel(String[] parts, Board game) {
+            int levelToBeSet = getValue(parts);
+            if (levelToBeSet >= 1) {
+                game.setLevel(levelToBeSet);
+            } else {
+                error("Given level is invalid.");
+            }
+        }
+
+        private static Game regulateSwitch(Board game) {
+            Game newGame;
+            if(game.getFirstPlayer() == Player.HUMAN) {
+                newGame = new Game(false);
+            } else {
+                newGame = new Game(true);
+            }
+            return newGame;
+        }
+
+        private static int getValue(String[] parts) {
+            String value;
+            int returnValue = 0;
+            try {
+                value = parts[INDEX_OF_VALUE];
+            } catch (IndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("Command not correct, pleas "
+                        + "use <HELP> if commands are not known.");
+            }
+            if (isInteger(value)) {
+                returnValue = Integer.parseInt(value);
+            }
+            return returnValue;
         }
 
         private static boolean isInteger(String part) {
@@ -57,8 +107,7 @@
             for (int i = 0; i < part.length(); i++) {
                 if (part.charAt(0) < '0' || part.charAt(0) > '9') {
                     isInt = false;
-                    error("Method has to of the form MOVE i, " +
-                            "where i is an Integer!");
+                    error("Invalid input! Integer needed!");
                     break;
                 }
             }
@@ -77,14 +126,19 @@
                     """
                         Following commands can be used in this program:
                         To create a new game: NEW
+                        
                         To set the difficulty i: LEVEL i (if no difficulty is
-                        chosen, the bot enemy has default difficulty 4
+                               chosen, the bot enemy has default difficulty 4
+                               
                         To switch the person who plays the first move and
-                        restart the game: SWITCH
+                               restart the game: SWITCH
+                               
                         To place a chip in the column c: MOVE c
+                        
                         To print out the current game board: PRINT
+                        
                         To give out the winning 4-chip-group of the ended game:
-                         WITNESS
+                               WITNESS
                         To quit the program: QUIT
                             """);
         }

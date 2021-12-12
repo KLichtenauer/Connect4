@@ -1,13 +1,15 @@
 package model;
 
+import kotlin.reflect.jvm.internal.ReflectProperties;
+
 import java.util.Collection;
 
 public class Game implements Board {
 
-    String[][] gameBoard;
+    Player[][] gameBoard;
     Player firstPlayer;
-    Player humanPlayer;
-    Player botPlayer;
+    Player humanPlayer = Player.HUMAN;
+    Player botPlayer = Player.BOT;
     int level;
 
     public Game(boolean isFirstPlayerHuman) {
@@ -17,20 +19,18 @@ public class Game implements Board {
     }
 
     private void setPlayers(boolean isFirstPlayerHuman) {
-        humanPlayer = new Player();
-        botPlayer = new Player();
         if (isFirstPlayerHuman) {
-            firstPlayer = humanPlayer;
+            firstPlayer = Player.HUMAN;
         } else {
-            firstPlayer = botPlayer;
+            firstPlayer = Player.BOT;
         }
     }
 
     private void createBoard() {
-        gameBoard = new String[Board.ROWS][Board.COLS];
+        gameBoard = new Player[Board.ROWS][Board.COLS];
         for (int i = 0; i < gameBoard.length; i++) {
             for (int j = 0; j < gameBoard[0].length; j++) {
-                gameBoard[i][j] = ".";
+                gameBoard[i][j] = Player.NOBODY;
             }
         }
     }
@@ -40,9 +40,24 @@ public class Game implements Board {
         return firstPlayer;
     }
 
+    // TODO: 11.12.2021 Utility klasse mit überprüfung ob move zulässig ist.
+    // TODO: Es sollte dabei gleich überprüft werden ob in der Spalte noch was frei ist.
+    // TODO: Nur mgl. wenn er auch dran ist. this.clone() oder nur clone() ???
     @Override
     public Board move(int col) {
-        return null;
+        Game gameAfterMove = null;
+        if (Validate.isMoveValid(col)) {
+            gameAfterMove = (Game) this.clone();
+            int colConvToIndex = col - 1;
+            boolean iterate = true;
+            for (int i = Board.ROWS - 1; i >= 0 && iterate; i--) {
+                if(gameBoard[i][colConvToIndex] == Player.NOBODY) {
+                    gameAfterMove.gameBoard[i][colConvToIndex] = Player.HUMAN;
+                    iterate = false;
+                }
+           }
+       }
+       return gameAfterMove;
     }
 
     @Override
@@ -73,32 +88,64 @@ public class Game implements Board {
     @Override
     public Player getSlot(int row, int col) {
         Player player;
-        String content = gameBoard[row][col];
-        if (content.equals("O")) {
+        Player content = gameBoard[row][col];
+        if (content.equals(Player.BOT)) {
             player = botPlayer;
-        } else if (content.equals("X")) {
+        } else if (content.equals(Player.HUMAN)) {
             player = humanPlayer;
         } else {
-            player = null;
+            player = Player.NOBODY;
         }
         return player;
     }
 
     @Override
     public Board clone() {
-        Board cloneBoard = new Game(humanPlayer == firstPlayer);
-        return null;
+        Game clonedBoard = new Game(humanPlayer == firstPlayer);
+        clonedBoard.gameBoard = gameBoard.clone();
+        clonedBoard.level = level;
+        return clonedBoard;
     }
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < gameBoard.length; i++) {
-            for (int j = 0; j < gameBoard[0].length; j++) {
-                builder.append(gameBoard[i][j]).append(" ");
+        for (int row = 0; row < Board.ROWS; row++) {
+            for (int col = 0; col < Board.COLS; col++) {
+                builder.append(gameBoard[row][col]);
+                if(!(col == Board.COLS - 1)) {
+                    builder.append(" ");
+                }
             }
             builder.append("\n");
         }
         return builder.toString();
+    }
+
+    private void getVerticalGroups() {
+
+        int[][] groups = new int[2][];
+        int[] groupsOfHuman = new int[4];
+        int[] groupsOfBot = new int[4];
+        groups[0] = groupsOfHuman;
+        groups[1] = groupsOfBot;
+        int counter = 0;
+        Player currentPlayer = Player.NOBODY;
+        for (int row = 0; row < Board.ROWS ; row++) {
+            for (int col = 0; col < Board.COLS; col++) {
+                if (gameBoard[row][col] != currentPlayer
+                        || col == Board.COLS - 1) {
+                    if (currentPlayer == Player.BOT) {
+                        groupsOfBot[counter - 1]++;
+                    } else if (currentPlayer == Player.HUMAN) {
+                        groupsOfHuman[counter - 1]++;
+                    }
+                    counter = 1;
+                    currentPlayer = gameBoard[row][col];
+                } else {
+                    counter++;
+                }
+            }
+        }
     }
 }

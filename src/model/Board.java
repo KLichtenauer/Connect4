@@ -124,5 +124,4 @@ public interface Board extends Cloneable {
      */
     @Override
     String toString();
-
 }
