@@ -1,6 +1,7 @@
     import model.Board;
     import model.Game;
     import model.Player;
+    import model.Validate;
 
     import java.io.BufferedReader;
     import java.io.IOException;
@@ -34,11 +35,13 @@
                         regulateLevel(parts, game);
                     case 'm':
                         game = regulateMove(parts, game);
+                        game = game.machineMove(); // ITS HAPPENING
                         break;
                     case 'n':
                         game = new Game(true);
                         break;
                     case 's':
+                        assert game != null;
                         game = regulateSwitch(game);
                         break;
                     case 'w':
@@ -59,28 +62,31 @@
         }
 
         private static Board regulateMove(String[] parts, Board game) {
+            assert parts != null;
+            assert game != null;
             int chosenCol = getValue(parts);
-            if(chosenCol >= 1 && chosenCol < 8) {
+            if(Validate.colIsValid(chosenCol)) {
                 return game.move(chosenCol);
             } else {
-                error("Given column is invalid.");
                 return null;
             }
         }
 
         private static void regulateLevel(String[] parts, Board game) {
+            assert parts != null;
+            assert game != null;
             int levelToBeSet = getValue(parts);
-            if (levelToBeSet >= 1) {
+            if (Validate.levelIsValid(levelToBeSet)) {
                 game.setLevel(levelToBeSet);
-            } else {
-                error("Given level is invalid.");
             }
         }
 
         private static Game regulateSwitch(Board game) {
+            assert game != null;
             Game newGame;
             if(game.getFirstPlayer() == Player.HUMAN) {
                 newGame = new Game(false);
+                newGame.machineMove();
             } else {
                 newGame = new Game(true);
             }
@@ -88,6 +94,7 @@
         }
 
         private static int getValue(String[] parts) {
+            assert parts != null;
             String value;
             int returnValue = 0;
             try {
@@ -103,6 +110,7 @@
         }
 
         private static boolean isInteger(String part) {
+            assert part != null;
             boolean isInt = true;
             for (int i = 0; i < part.length(); i++) {
                 if (part.charAt(0) < '0' || part.charAt(0) > '9') {

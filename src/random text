@@ -1,0 +1,33 @@
+public static void main(String[] args) {
+        Game game = new Game(true);
+        //Game clone = (Game) game.clone();
+        game.move(7);
+        game.move(6);
+        game.move(2);
+
+
+        game.universalMove(3,Player.BOT) ;
+        game.universalMove(4,Player.BOT) ;
+        game.universalMove(4,Player.BOT) ;
+        game.universalMove(4,Player.BOT) ;
+        game.universalMove(4,Player.BOT) ;
+        //Game clone2 = (Game) game.clone();
+        //boolean k = clone2.currentPlayer == clone.currentPlayer;
+        //boolean p = game.gameBoard == clone.gameBoard;
+        //game.universalMove(4,Player.BOT) ;
+        //game.universalMove(4,Player.BOT) ;
+        //game.universalMove(7,Player.BOT) ;
+        //game.universalMove(1,Player.BOT) ;
+        //
+        //int[][] arr = game.getHorizontalGroups();
+        //int[][] arr2 = game.getVerticalGroups();
+        //int[][] arr3 = game.getDescendingGroups();
+        //int[][] arr4 = game.getAscendingGroups();
+        //int q = game.getQ();
+        //int p = game.getP();
+        //int r = game.getR();
+        System.out.println(game.evaluateMove());
+        ////game.getAscendingGroups();
+        ////game.getDescendingGroups();
+        //int z;
+    }
