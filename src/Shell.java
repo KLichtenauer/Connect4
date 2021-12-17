@@ -3,6 +3,7 @@
     import model.Player;
     import model.Validate;
 
+    import javax.swing.*;
     import java.io.BufferedReader;
     import java.io.IOException;
     import java.io.InputStreamReader;
@@ -21,21 +22,35 @@
             execute(reader);
         }
 
-
+        // TODO: 17.12.2021 Ausgabe für gewonnenes Spiel 
         private static void execute(BufferedReader reader) throws IOException {
             Board game = new Game(true);
             boolean programRunning = true;
             while (programRunning) {
                 System.out.print("connect4> ");
                 String input = reader.readLine();
-                char keyChar = Character.toLowerCase(input.charAt(0));
+                char keyChar = ' ';
+                try {
+                    keyChar = Character.toLowerCase(input.charAt(0));
+                } catch (IndexOutOfBoundsException e) {
+                    throw new IllegalArgumentException("Input must not be" +
+                            " empty!");
+                }
                 String[] parts = input.split(" ");
                 switch (keyChar) {
                     case 'l':
                         regulateLevel(parts, game);
+                        break;
                     case 'm':
                         game = regulateMove(parts, game);
-                        game = game.machineMove(); // ITS HAPPENING
+                        if(game != null) {
+                            if(!game.isGameOver()) {
+                                game = game.machineMove();
+                            }
+                            if(game.isGameOver()) {
+                                regulateGameEnd(game);
+                            }
+                        }
                         break;
                     case 'n':
                         game = new Game(true);
@@ -61,9 +76,19 @@
             }
         }
 
+        private static void regulateGameEnd(Board game) {
+            Player winner = game.getWinner();
+            if(winner == Player.HUMAN) {
+                System.out.println("Congratulations! You won.");
+            } else if(winner == Player.BOT) {
+                System.out.println("Sorry! Machine wins");
+            } else {
+                System.out.println("Nobody wins. Tie.");
+            }
+        }
+
         private static Board regulateMove(String[] parts, Board game) {
-            assert parts != null;
-            assert game != null;
+            assert parts != null && game != null;
             int chosenCol = getValue(parts);
             if(Validate.colIsValid(chosenCol)) {
                 return game.move(chosenCol);
@@ -73,8 +98,7 @@
         }
 
         private static void regulateLevel(String[] parts, Board game) {
-            assert parts != null;
-            assert game != null;
+            assert parts != null && game != null;
             int levelToBeSet = getValue(parts);
             if (Validate.levelIsValid(levelToBeSet)) {
                 game.setLevel(levelToBeSet);
@@ -86,7 +110,7 @@
             Game newGame;
             if(game.getFirstPlayer() == Player.HUMAN) {
                 newGame = new Game(false);
-                newGame.machineMove();
+                newGame = (Game) newGame.machineMove();
             } else {
                 newGame = new Game(true);
             }
@@ -125,7 +149,7 @@
 
         private static String errorMessage(){
             return ("Make sure you use the correct" +
-                    " commands! \nIf you need help with the commands just" +
+                    " commands! \nIf you need help with the commands just " +
                     "type HELP in the commandline ");
         }
 

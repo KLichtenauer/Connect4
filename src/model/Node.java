@@ -17,16 +17,17 @@ public class Node {
             setChildren();
     }
 
-    // TODO: 15.12.2021 Es wurde immer in spalte 0 eingeschmissen, vlt wegen col = 0?
     // TODO: 14.12.2021 move kann illegalArugmentException schmeißen, was damit tun?
+    // TODO: 17.12.2021 schauen wenn game over ist nichts mehr machen!
+    // TODO: 17.12.2021 überprüfen ob mehrere Spiele hintereinadner ausgeführt
+    //  werden können bzw die einstellungen gespeichert werden
     public void setChildren() {
         int currentValue = game.evaluateMove();
         int col = 0;
-        if (level <= 0) { // TODO: 14.12.2021 ich glaub == 1, da hier dann aufgelöst werden muss. KÖnnte aber auch 0 sein
+        if (level <= 0) {
             valueOfBoard = currentValue;
-        } else if (game.getCurrentPlayer() == Player.BOT) { //human move
+        } else if (game.getCurrentPlayer() == Player.HUMAN) { //human move
             int minValue = Integer.MAX_VALUE;
-
             for (int i = 0; i < 7; i++) {
                children[i] = simulateMove(i + 1, Player.HUMAN);
                 int value = children[i].valueOfBoard;
@@ -35,7 +36,9 @@ public class Node {
                     col = i;
                 }
             }
-            valueOfBoard = currentValue + minValue;
+            valueOfBoard = parent != null ? currentValue + minValue : minValue;
+            //valueOfBoard = currentValue + minValue;
+            //valueOfBoard = minValue;
         } else {
             int maxValue = Integer.MIN_VALUE;
             for (int i = 0; i < 7; i++) {
@@ -46,16 +49,18 @@ public class Node {
                     col = i;
                 }
             }
-            valueOfBoard = currentValue + maxValue;
+            //valueOfBoard = currentValue + maxValue;
+            //valueOfBoard = maxValue;
+            valueOfBoard = parent != null ? currentValue + maxValue : maxValue;
+
         }
         //chosenCol = col;
         chosenCol = col + 1; // + 1 because in the method machineMove
                              // universalMove needs an col between 1 - 7
-
     }
 
     private Node simulateMove(int col, Player player) {
-        Game boardAfterMove = (Game) game.universalMove(col, player);
+        Game boardAfterMove = (Game) game.universalMove(col);
         int levelForMethod = level - 1;
         return new Node(this, levelForMethod, boardAfterMove);
     }
@@ -63,7 +68,4 @@ public class Node {
     public int getChosenCol() {
         return chosenCol;
     }
-
-
-
 }
