@@ -8,6 +8,7 @@ public class Node {
     Game game;
     int valueOfBoard;
     int chosenCol;
+    Coordinates2D witness;
 
     public Node(Node parent, int level, Game game) {
             this.parent = parent;
@@ -22,7 +23,7 @@ public class Node {
     // TODO: 17.12.2021 überprüfen ob mehrere Spiele hintereinadner ausgeführt
     //  werden können bzw die einstellungen gespeichert werden
     public void setChildren() {
-        int currentValue = game.evaluateMove();
+        int currentValue = game.evaluateMove(parent == null);
         int col = 0;
         if (level <= 0) {
             valueOfBoard = currentValue;
@@ -37,9 +38,7 @@ public class Node {
                 }
             }
             valueOfBoard = parent != null ? currentValue + minValue : minValue;
-            //valueOfBoard = currentValue + minValue;
-            //valueOfBoard = minValue;
-        } else {
+        } else { // bot move
             int maxValue = Integer.MIN_VALUE;
             for (int i = 0; i < 7; i++) {
                 children[i] = simulateMove(i + 1, Player.BOT);
@@ -49,12 +48,9 @@ public class Node {
                     col = i;
                 }
             }
-            //valueOfBoard = currentValue + maxValue;
-            //valueOfBoard = maxValue;
             valueOfBoard = parent != null ? currentValue + maxValue : maxValue;
 
         }
-        //chosenCol = col;
         chosenCol = col + 1; // + 1 because in the method machineMove
                              // universalMove needs an col between 1 - 7
     }

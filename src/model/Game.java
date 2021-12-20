@@ -1,9 +1,7 @@
 package model;
 
 import javax.swing.*;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 
 public class Game implements Board {
 
@@ -51,6 +49,7 @@ public class Game implements Board {
         return firstPlayer;
     }
 
+    // TODO: 20.12.2021 Testen was passiert wenn move nach ende des spiels aufgerufen wird
     // TODO: Es sollte dabei gleich überprüft werden ob in der Spalte noch was frei ist.
     @Override
     public Board move(int col) {
@@ -59,10 +58,12 @@ public class Game implements Board {
             if (Validate.moveIsValid(this, col)
                     && Validate.isHumansTurn(this)) {
                 gameAfterMove = (Game) universalMove(col);
+                gameAfterMove.gameIsRunning = !gameAfterMove.isGameOver();
             }
         } catch (IllegalMoveException e) {
             e.printStackTrace();
         }
+
         return gameAfterMove;
     }
 
@@ -70,7 +71,9 @@ public class Game implements Board {
     public Board machineMove() {
         Node node = new Node(null, level, this);
         System.out.println(node.valueOfBoard);
-        return universalMove(node.getChosenCol());
+        Game gameAfterMove = (Game) universalMove(node.getChosenCol());
+        gameAfterMove.gameIsRunning = !gameAfterMove.isGameOver();
+        return gameAfterMove;
     }
 
     // TODO: 17.12.2021 Game is running = false wirft exception 
@@ -96,8 +99,9 @@ public class Game implements Board {
             } else {
                 gameAfterMove.currentPlayer = Player.BOT;
             }
-            gameAfterMove.gameIsRunning = !gameAfterMove.isGameOver();
         }
+        // By counting getting the P value, the gameBoard will be checked for
+        gameAfterMove.getP();
         return gameAfterMove;
     }
 
@@ -115,16 +119,15 @@ public class Game implements Board {
         int botGroup = getNumberOfGroups(4, 1);
         boolean isBoardFull = isBoardFull();
         boolean isGameOver = false;
-        if(isBoardFull) {
-            isGameOver = true;
-            currentPlayer = Player.NOBODY;
-        }
         if(humGroup > 0) {
             isGameOver = true;
             currentPlayer = Player.HUMAN;
         } else if(botGroup > 0) {
             isGameOver = true;
             currentPlayer = Player.BOT;
+        } else if(isBoardFull) {
+            isGameOver = true;
+            currentPlayer = Player.NOBODY;
         }
         return isGameOver;
     }
@@ -146,7 +149,7 @@ public class Game implements Board {
 
     @Override
     public Collection<Coordinates2D> getWitness() {
-        return null;
+        return witness;
     }
 
     // TODO: 16.12.2021     // Validate.colIsValid(col) &&
@@ -197,93 +200,42 @@ public class Game implements Board {
         return builder.toString();
     }
 
-    private int[][] getHorizontalGroups() {
-        int[][] groups = new int[2][4];
-        int counter = 1;
-        Player currentPlayer = Player.NOBODY;
-        for (int row = 0 ; row < ROWS ; row++) {
-            for (int col = 0; col < COLS; col++) {
-                Player currentField = getSlot(row, col);
-                if (currentField != currentPlayer
-                        || col == COLS - 1) {
-                    if (col == COLS - 1) {
-                        if(currentPlayer == currentField) {
-                            counter++;
-                        }
-                    }
-                    if (currentPlayer == Player.BOT) {
-                        groups[1][counter - 1]++;
-                    } else if (currentPlayer == Player.HUMAN) {
-                        groups[0][counter - 1]++;
-                    }
-                    currentPlayer = currentField;
-                    counter = 1;
-                } else {
-                    if(counter < 4) {
-                        counter++;
-                    }
-                }
-            }
-        }
-        return groups;
-    }
-
-    private int[][] getVerticalGroups() {
-        int[][] groups = new int[2][4];
-        int counter = 1;
-        Player currentPlayer = Player.NOBODY;
-        for (int col = 0; col < COLS ; col++) {
-            for (int row = 0; row < ROWS; row++) {
-                Player currentField = getSlot(row, col);
-                if (currentField != currentPlayer
-                        || row == ROWS - 1) {
-                    if (row == ROWS - 1) {
-                        if(currentPlayer == currentField) {
-                            counter++;
-                        }
-                    }
-                    if (currentPlayer == Player.BOT) {
-                        groups[1][counter - 1]++;
-                    } else if (currentPlayer == Player.HUMAN) {
-                        groups[0][counter - 1]++;
-                    }
-                    currentPlayer = currentField;
-                    counter = 1;
-                } else {
-                    if(counter < 4) {
-                        counter++;
-                    }
-                }
-            }
-        }
-        return groups;
-    }
-
-
+    // TODO: 20.12.2021 "groups" of 1 chip neseccarily dont get counted
+    //  correctly because I dont need to. Fürs Doc. Kann man vlt auch irgendwie
+    //  beheben. Indem man keine 1er gruppen mehr zählt?
     private int[][] getStraightGroups(boolean searchingHorizontal) {
         int i = searchingHorizontal ? 0 : 1;
         int[][] groups = new int[2][4];
         int counter = 1;
-        Player currentPlayer = Player.NOBODY;
-        for (int row = 0 ; row < ROWS + i; row++) {
-            for (int col = 0; col < COLS - i; col++) {
-                Player currentField = searchingHorizontal ? getSlot(row, col) : getSlot(col, row);
-                if (currentField != currentPlayer
-                        || col == COLS - i - 1) {
-                    if (col == COLS - i - 1) {
-                        if(currentPlayer == currentField) {
-                            counter++;
-                        }
+        for (int line = 0 ; line < ROWS + i; line++) {
+            Player typeOfCurrentGroup = Player.NOBODY;
+            for (int indexOfLineElement = 0; indexOfLineElement < COLS - i;
+                 indexOfLineElement++) {
+                Player currentField = searchingHorizontal
+                        ? getSlot(line, indexOfLineElement)
+                        : getSlot(indexOfLineElement, line);
+                boolean groupChanged = currentField != typeOfCurrentGroup;
+                boolean isEndOfArr = indexOfLineElement == COLS - i - 1;
+                boolean isGroupMax = counter < 4;
+                if (groupChanged || isEndOfArr) {
+                    if (isEndOfArr && !groupChanged && isGroupMax) {
+                        counter++;
                     }
-                    if (currentPlayer == Player.BOT) {
+                    if (typeOfCurrentGroup == Player.BOT) {
                         groups[1][counter - 1]++;
-                    } else if (currentPlayer == Player.HUMAN) {
+                    } else if (typeOfCurrentGroup == Player.HUMAN) {
                         groups[0][counter - 1]++;
                     }
-                    currentPlayer = currentField;
+                    if(counter == 4 && witness == null &&
+                            typeOfCurrentGroup != Player.NOBODY) {
+                        Group group = searchingHorizontal ? Group.HORIZONTAL
+                                : Group.VERTICAL;
+                        setWitness(line, indexOfLineElement, group);
+                    }
+                    typeOfCurrentGroup = currentField;
                     counter = 1;
                 } else {
-                    if(counter < 4) {
+                    if(isGroupMax) {
                         counter++;
                     }
                 }
@@ -292,118 +244,80 @@ public class Game implements Board {
         return groups;
     }
 
-    // TODO: 14.12.2021 currentPlayer und currentField nen besseren Namen geben
-    private int[][] getAscendingGroups() {
-        int[][] groups = new int[2][4];
-        int diagonals = COLS + Board.ROWS - 1;
-        for (int i = 0; i < diagonals; i++) {
-            int counter = 1;
-            Player currentPlayer = Player.NOBODY;
-            int col = Integer.max(i - ROWS + 1, 0);
-            int row = Integer.max(i - col, 0);
-            boolean nextFieldExists = true;
-            while (nextFieldExists) {
-                Player currentField = getSlot(row, col);
-                if (currentPlayer != currentField || col == COLS - 1
-                        || row == 0) {
-                    if (col == COLS - 1 || row == 0) {
-                        nextFieldExists = false;
-                        if(currentPlayer == getSlot(row, col)) {
-                            counter++;
-                        }
-                    }
-                    if (currentPlayer == Player.BOT) {
-                        groups[1][counter - 1]++;
-                    } else if (currentPlayer == Player.HUMAN) {
-                        groups[0][counter - 1]++;
-                    }
-                    currentPlayer = currentField;
-                    counter = 1;
+    // TODO: 20.12.2021 vertikale und bot gruppen werden nicht gefunden
+    private void setWitness(int line, int indexOfLineElement, Group group) {
+        TreeSet<Coordinates2D> witness = new TreeSet<>();
+        switch (group) {
+            case VERTICAL:
+                for (int i = 0; i < 4; i++) {
+                    witness.add(new Coordinates2D(indexOfLineElement - i,
+                                line));
                 }
-                else {
-                    if(counter < 4) {
-                        counter++;
-                    }
+                break;
+            case HORIZONTAL:
+                for (int i = 0; i < 4; i++) {
+                    witness.add(new Coordinates2D(line,
+                            indexOfLineElement - i));
                 }
-                col++;
-                row--;
-            }
+                break;
+            case ASCENDING:
+                for (int i = 0; i < 4; i++) {
+                    witness.add(new Coordinates2D(line + i + 1,
+                            indexOfLineElement - i - 1));
+                }
+                break;
+            case DESCENDING:
+                for (int i = 0; i < 4; i++) {
+                    witness.add(new Coordinates2D(line - i,
+                            indexOfLineElement - i));
+                }
+                break;
         }
-        return groups;
-    }
-
-
-    private int[][] getDescendingGroups() {
-        int[][] groups = new int[2][4];
-        for (int i = 0; i < diagonals; i++) {
-            int counter = 1;
-            Player currentPlayer = Player.NOBODY;
-            int col = Integer.max(COLS - 1 - i, 0);
-            int row = Integer.max(i - COLS + 1, 0);
-            boolean nextFieldExists = true;
-            while (nextFieldExists) {
-                Player currentField = getSlot(row, col);
-                if (currentPlayer != currentField || col == COLS - 1
-                        || row == ROWS - 1) {
-                    if (col == COLS - 1 || row == ROWS - 1) {
-                        nextFieldExists = false;
-                        if(currentPlayer == currentField) {
-                            counter++;
-                        }
-                    }
-                    if (currentPlayer == Player.BOT) {
-                        groups[1][counter - 1]++;
-                    } else if (currentPlayer == Player.HUMAN) {
-                        groups[0][counter - 1]++;
-                    }
-                    currentPlayer = currentField;
-                    counter = 1;
-                }
-                else {
-                    if(counter < 4) {
-                        counter++;
-                    }
-                }
-                col++;
-                row++;
-            }
+        if(this.witness == null) {
+            this.witness = witness;
         }
-        return groups;
     }
 
     private int[][] getDiagonalGroups(boolean isAscending) {
         int[][] groups = new int[2][4];
         for (int i = 0; i < diagonals; i++) {
             int counter = 1;
-            Player currentPlayer = Player.NOBODY;
+            Player typeOfCurrentGroup = Player.NOBODY;
             int col = isAscending ? Integer.max(i - ROWS + 1, 0)
-                    : Integer.max(COLS - 1 - i, 0);
+                                  : Integer.max(COLS - 1 - i, 0);
             int row = isAscending ? Integer.max(i - col, 0)
-                    : Integer.max(i - COLS + 1, 0);
+                                  : Integer.max(i - COLS + 1, 0);
             boolean nextFieldExists = true;
             while (nextFieldExists) {
                 Player currentField = getSlot(row, col);
-                if (currentPlayer != currentField || col == COLS - 1
-                        || row == 0 || row == ROWS - 1) {
-                    if (col == COLS - 1 || (row == 0 && isAscending)
-                            || (row == ROWS - 1 && !isAscending)) { // es liegt einerseits an der row == ROWS - 1 abprüfung
+                boolean isGroupMax = counter < 4;
+                boolean groupChanged = currentField != typeOfCurrentGroup;
+                boolean isEndRightSide = col == COLS - 1;
+                boolean isEndBottom = row == ROWS - 1;
+                boolean isEndTop = row == 0;
+                if (groupChanged || isEndRightSide || isEndTop || isEndBottom) {
+                    if (isEndRightSide || (isEndTop && isAscending)
+                            || (isEndBottom && !isAscending)) { // es liegt einerseits an der row == ROWS - 1 abprüfung
                         nextFieldExists = false;
-                        if(currentPlayer == getSlot(row, col)) {
+                        if(!groupChanged && isGroupMax) {
                             counter++;
                         }
                     }
-                    if (currentPlayer == Player.BOT) {
+                    if (typeOfCurrentGroup == Player.BOT) {
                         groups[1][counter - 1]++;
-                    } else if (currentPlayer == Player.HUMAN) {
+                    } else if (typeOfCurrentGroup == Player.HUMAN) {
                         groups[0][counter - 1]++;
                     }
-                    currentPlayer = currentField;
-                    counter = 1;
-                }
-                else {
-                    if(counter < 4) {
-                        counter++;
+                    if(counter == 4 && witness == null
+                            && typeOfCurrentGroup != Player.NOBODY) {
+                        Group group = isAscending ? Group.ASCENDING
+                                                  : Group.DESCENDING;
+                        setWitness(row, col, group);
                     }
+                    typeOfCurrentGroup = currentField;
+                    counter = 1;
+                } else if(isGroupMax) {
+                    counter++;
                 }
                 col++;
                 row = isAscending ? row - 1 : row + 1;
@@ -413,18 +327,17 @@ public class Game implements Board {
     }
 
 
-    public int evaluateMove () {
-        return getP() + getQ() + getR();
+    public int evaluateMove (boolean isFirstMove) {
+        return getP() + getQ() + getR(isFirstMove);
     }
 
-    private int getR() {
-        //int r = 0;
-        //if (!gameIsRunning) {
-        //    r = 5000000;
-        //}
-        //return r;
-        int value = getNumberOfGroups(4, 1);
-        return value == 0 ? 0 : 5000000;
+    private int getR(boolean isFirstMove) {
+        int r = 0;
+        if(currentPlayer == Player.BOT && isFirstMove) {
+            int value = getNumberOfGroups(4, 1);
+            r = value == 0 ? 0 : 5000000;
+        }
+        return r;
     }
     
     private int getQ() {
@@ -433,6 +346,16 @@ public class Game implements Board {
                 * counter[1][4] + counter[1][5] - (counter[0][1] + 2
                 * counter[0][2] + 3 * counter[0][3] + 2 * counter[0][4]
                 + counter[0][5]);
+    }
+
+    private int getP() {
+        int h2 = getNumberOfGroups(2, 0);
+        int h3 = getNumberOfGroups(3, 0);
+        int h4 = getNumberOfGroups(4, 0);
+        int m2 = getNumberOfGroups(2, 1);
+        int m3 = getNumberOfGroups(3, 1);
+        int m4 = getNumberOfGroups(4, 1);
+        return 50 + m2 + 4 * m3 + 5000 * m4 - h2 - 4 * h3 - 500000 * h4;
     }
 
     private int[][] numberOfChipsPerCol() {
@@ -452,74 +375,68 @@ public class Game implements Board {
         return counter;
     }
 
-    // TODO: 16.12.2021 nach testen von den zusammengefassten methoden testen!
-    private int getP() {
-        int h2 = getNumberOfGroups(2, 0);
-        int h3 = getNumberOfGroups(3, 0);
-        int h4 = getNumberOfGroups(4, 0);
-        int m2 = getNumberOfGroups(2, 1);
-        int m3 = getNumberOfGroups(3, 1);
-        int m4 = getNumberOfGroups(4, 1);
-        return 50 + m2 + 4 * m3 + 5000 * m4 - h2 - 4 * h3 - 500000 * h4;
-    }
-
     private int getNumberOfGroups(int groupSize, int player) {
         assert groupSize > 1 && groupSize < 5 && (player == 1 || player == 0);
-        int[][] vertGroups = this.getVerticalGroups();
-        int[][] horGroups = this.getHorizontalGroups();
-        int[][] ascGroups = this.getAscendingGroups();
-        int[][] descGroups = this.getDescendingGroups();
+        int[][] vertGroups = this.getStraightGroups(false);
+        int[][] horGroups = this.getStraightGroups(true);
+        int[][] ascGroups = this.getDiagonalGroups(true);
+        int[][] descGroups = this.getDiagonalGroups(false);
         int i = groupSize - 1;
         return vertGroups[player][i] + horGroups[player][i]
                 + ascGroups[player][i] + descGroups[player][i];
     }
 
 
-
-
     public static void main(String[] args) {
+
         Game game = new Game(true);
-        game.gameBoard[5][6] = Player.HUMAN;
-        game.gameBoard[4][6] = Player.HUMAN;
-        game.gameBoard[4][5] = Player.HUMAN;
-        game.gameBoard[5][5] = Player.HUMAN;
-        game.gameBoard[3][5] = Player.HUMAN;
-        game.gameBoard[4][4] = Player.HUMAN;
-        game.gameBoard[5][1] = Player.HUMAN;
-        game.gameBoard[2][2] = Player.HUMAN;
-        game.gameBoard[2][3] = Player.HUMAN;
+        game.gameBoard[2][0] = Player.HUMAN;
+        game.gameBoard[3][0] = Player.HUMAN;
+        game.gameBoard[4][0] = Player.HUMAN;
+        game.gameBoard[5][0] = Player.HUMAN;
 
-        //game.gameBoard[3][4] = Player.HUMAN;
+        Coordinates2D c1 = new Coordinates2D(5,0);
+        Coordinates2D c2 = new Coordinates2D(3, 1);
+        Coordinates2D c3 = new Coordinates2D(2, 1);
+        Coordinates2D c4 = new Coordinates2D(1, 1);
 
-        //Game game2 = new Game(true);
-        game.gameBoard[5][4] = Player.BOT;
-        game.gameBoard[3][4] = Player.BOT;
-        game.gameBoard[3][3] = Player.BOT;
-        game.gameBoard[5][3] = Player.BOT;
-        game.gameBoard[4][3] = Player.BOT;
-        game.gameBoard[3][2] = Player.BOT;
+        TreeSet<Coordinates2D> treeSet = new TreeSet<>();
+        treeSet.add(c1);
+        treeSet.add(c2);
+        treeSet.add(c3);
+        treeSet.add(c4);
+
+
+        int i = game.getP();
+
         game.gameBoard[5][2] = Player.BOT;
-        game.gameBoard[4][2] = Player.BOT;
-        game.gameBoard[4][1] = Player.BOT;
+        game.gameBoard[3][3] = Player.BOT;
+        game.gameBoard[2][3] = Player.BOT;
+        game.gameBoard[4][3] = Player.BOT;
+        //game.gameBoard[1][4] = Player.BOT;
+        game.gameBoard[2][4] = Player.BOT;
+        game.gameBoard[3][4] = Player.BOT;
 
-        //game.gameBoard[4][4] = Player.BOT; // ÜBELTÄTER
-
-        int value = game.evaluateMove();
-        game.setLevel(2);
+        //game.setLevel(4);
         game.currentPlayer = Player.BOT;
         Board board = game.machineMove();
         int[][] arr1 = game.getDiagonalGroups(true);
         int[][] arr2 = game.getDiagonalGroups(false);
-        int[][] arr3 = game.getAscendingGroups();
-        int[][] arr4 = game.getDescendingGroups();
+        //int[][] arr3 = game.getAscendingGroups();
+        //int[][] arr4 = game.getDescendingGroups();
         int[][] arr5 = game.getStraightGroups(true);
         int[][] arr6 = game.getStraightGroups(false);
-        int[][] arr7 = game.getHorizontalGroups();
-        int[][] arr8 = game.getVerticalGroups();
-        boolean i = Arrays.deepEquals(arr1, arr3);
-        boolean i2 = Arrays.deepEquals(arr2, arr4);
-        boolean i3 = Arrays.deepEquals(arr5, arr7);
-        boolean i4 = Arrays.deepEquals(arr6, arr8);
+        //int[][] arr7 = game.getHorizontalGroups();
+        //int[][] arr8 = game.getVerticalGroups();
+        //boolean i = Arrays.deepEquals(arr1, arr3);
+        //boolean i2 = Arrays.deepEquals(arr2, arr4);
+        //boolean i3 = Arrays.deepEquals(arr5, arr7);
+        //boolean i4 = Arrays.deepEquals(arr6, arr8);
+
+        TreeSet set = new TreeSet();
+        set.add(4);
+        set.add(1);
+        System.out.println(set);
     }
 
 }

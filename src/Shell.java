@@ -1,12 +1,10 @@
-    import model.Board;
-    import model.Game;
-    import model.Player;
-    import model.Validate;
+    import model.*;
 
     import javax.swing.*;
     import java.io.BufferedReader;
     import java.io.IOException;
     import java.io.InputStreamReader;
+    import java.util.Set;
 
 
     /**
@@ -46,6 +44,7 @@
                         if(game != null) {
                             if(!game.isGameOver()) {
                                 game = game.machineMove();
+                                System.out.println(game);
                             }
                             if(game.isGameOver()) {
                                 regulateGameEnd(game);
@@ -60,6 +59,7 @@
                         game = regulateSwitch(game);
                         break;
                     case 'w':
+                        regulateWitness(game);
                         break;
                     case 'p':
                         System.out.println(game);
@@ -73,6 +73,21 @@
                     default:
                         error(errorMessage());
                 }
+            }
+        }
+
+        private static void regulateWitness(Board game) {
+            if(game != null && game.getWitness() != null) {
+                Set<Coordinates2D> set = (Set<Coordinates2D>) game.getWitness();
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < 3; i++) {
+                    builder.append(set.toArray()[i].toString());
+                    builder.append(", ");
+                }
+                builder.append(set.toArray()[3].toString());
+                System.out.println(builder.toString());
+            } else {
+                error("No witness found.");
             }
         }
 
