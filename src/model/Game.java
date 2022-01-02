@@ -1,17 +1,15 @@
 package model;
 
-import javax.swing.*;
 import java.util.*;
 
 public class Game implements Board {
 
-    Player[][] gameBoard;
-    Player firstPlayer;
+    private Player[][] gameBoard;
+    private Player firstPlayer;
     private Player currentPlayer;
-    int level;
-    int diagonals = Board.COLS + Board.ROWS - 1;
-    boolean gameIsRunning;
-    Set<Coordinates2D> witness;
+    private int level;
+    private boolean gameIsRunning;
+    private Set<Coordinates2D> witness;
 
     // TODO: 14.12.2021 LEVEL WIEDER AUF STANDARD 4 SETZTEN!
     public Game(boolean isFirstPlayerHuman) {
@@ -21,6 +19,11 @@ public class Game implements Board {
         gameIsRunning = true;
     }
 
+    /**
+     * Getter for current player of {@code this} game.
+     *
+     * @return {@code currentPlayer}
+     */
     public Player getCurrentPlayer() {
         return currentPlayer;
     }
@@ -44,6 +47,9 @@ public class Game implements Board {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Player getFirstPlayer() {
         return firstPlayer;
@@ -51,6 +57,9 @@ public class Game implements Board {
 
     // TODO: 20.12.2021 Testen was passiert wenn move nach ende des spiels aufgerufen wird
     // TODO: Es sollte dabei gleich überprüft werden ob in der Spalte noch was frei ist.
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Board move(int col) {
         Game gameAfterMove = null;
@@ -63,14 +72,17 @@ public class Game implements Board {
         } catch (IllegalMoveException e) {
             e.printStackTrace();
         }
-
         return gameAfterMove;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Board machineMove() {
-        Node node = new Node(null, level, this);
-        System.out.println(node.valueOfBoard);
+        Board clone = clone();
+        Node node = new Node(null, level, (Game) clone);
+        System.out.println(node.getValueOfBoard());
         Game gameAfterMove = (Game) universalMove(node.getChosenCol());
         gameAfterMove.gameIsRunning = !gameAfterMove.isGameOver();
         return gameAfterMove;
@@ -105,7 +117,9 @@ public class Game implements Board {
         return gameAfterMove;
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setLevel(int level) {
         if (Validate.levelIsValid(level)) {
@@ -113,6 +127,9 @@ public class Game implements Board {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isGameOver() {
         int humGroup = getNumberOfGroups(4, 0);
@@ -142,11 +159,17 @@ public class Game implements Board {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Player getWinner() {
         return currentPlayer;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Collection<Coordinates2D> getWitness() {
         return witness;
@@ -154,6 +177,9 @@ public class Game implements Board {
 
     // TODO: 16.12.2021     // Validate.colIsValid(col) &&
     //  Validate.rowIsValid(row) ist noch nicht ganz richtig weil col oder row = 0 nicht geht
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Player getSlot(int row, int col) {
         Player player = null;
@@ -170,6 +196,9 @@ public class Game implements Board {
         return player;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Board clone() {
         Game clonedBoard;
@@ -185,6 +214,9 @@ public class Game implements Board {
         return clonedBoard;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -226,7 +258,7 @@ public class Game implements Board {
                     } else if (typeOfCurrentGroup == Player.HUMAN) {
                         groups[0][counter - 1]++;
                     }
-                    if(counter == 4 && witness == null &&
+                    if(counter == 4 && isWitnessNull() &&
                             typeOfCurrentGroup != Player.NOBODY) {
                         Group group = searchingHorizontal ? Group.HORIZONTAL
                                 : Group.VERTICAL;
@@ -244,7 +276,6 @@ public class Game implements Board {
         return groups;
     }
 
-    // TODO: 20.12.2021 vertikale und bot gruppen werden nicht gefunden
     private void setWitness(int line, int indexOfLineElement, Group group) {
         TreeSet<Coordinates2D> witness = new TreeSet<>();
         switch (group) {
@@ -273,13 +304,14 @@ public class Game implements Board {
                 }
                 break;
         }
-        if(this.witness == null) {
+        if(isWitnessNull()) {
             this.witness = witness;
         }
     }
 
     private int[][] getDiagonalGroups(boolean isAscending) {
         int[][] groups = new int[2][4];
+        int diagonals = Board.COLS + Board.ROWS - 1;
         for (int i = 0; i < diagonals; i++) {
             int counter = 1;
             Player typeOfCurrentGroup = Player.NOBODY;
@@ -308,7 +340,7 @@ public class Game implements Board {
                     } else if (typeOfCurrentGroup == Player.HUMAN) {
                         groups[0][counter - 1]++;
                     }
-                    if(counter == 4 && witness == null
+                    if(counter == 4 && isWitnessNull()
                             && typeOfCurrentGroup != Player.NOBODY) {
                         Group group = isAscending ? Group.ASCENDING
                                                   : Group.DESCENDING;
@@ -326,8 +358,12 @@ public class Game implements Board {
         return groups;
     }
 
+    private boolean isWitnessNull() {
+        return witness == null;
+    }
 
-    public int evaluateMove (boolean isFirstMove) {
+
+    public int evaluateGame(boolean isFirstMove) {
         return getP() + getQ() + getR(isFirstMove);
     }
 
@@ -390,32 +426,34 @@ public class Game implements Board {
     public static void main(String[] args) {
 
         Game game = new Game(true);
-        game.gameBoard[2][0] = Player.HUMAN;
-        game.gameBoard[3][0] = Player.HUMAN;
-        game.gameBoard[4][0] = Player.HUMAN;
-        game.gameBoard[5][0] = Player.HUMAN;
+        game.gameBoard[0][0] = Player.HUMAN;
+        game.gameBoard[0][1] = Player.BOT;
+        game.gameBoard[0][2] = Player.HUMAN;
+        game.gameBoard[0][3] = Player.BOT;
+        game.gameBoard[0][4] = Player.HUMAN;
+        game.gameBoard[0][5] = Player.HUMAN;
+        game.gameBoard[0][6] = Player.HUMAN;
+        //game.gameBoard[3][0] = Player.HUMAN;
+        //game.gameBoard[4][0] = Player.HUMAN;
+        //game.gameBoard[5][0] = Player.HUMAN;
 
         Coordinates2D c1 = new Coordinates2D(5,0);
         Coordinates2D c2 = new Coordinates2D(3, 1);
         Coordinates2D c3 = new Coordinates2D(2, 1);
         Coordinates2D c4 = new Coordinates2D(1, 1);
 
-        TreeSet<Coordinates2D> treeSet = new TreeSet<>();
-        treeSet.add(c1);
-        treeSet.add(c2);
-        treeSet.add(c3);
-        treeSet.add(c4);
-
+        String init = "";
+        String[] k = init.split(" ");
 
         int i = game.getP();
 
-        game.gameBoard[5][2] = Player.BOT;
-        game.gameBoard[3][3] = Player.BOT;
-        game.gameBoard[2][3] = Player.BOT;
-        game.gameBoard[4][3] = Player.BOT;
-        //game.gameBoard[1][4] = Player.BOT;
-        game.gameBoard[2][4] = Player.BOT;
-        game.gameBoard[3][4] = Player.BOT;
+        //game.gameBoard[5][2] = Player.BOT;
+        //game.gameBoard[3][3] = Player.BOT;
+        //game.gameBoard[2][3] = Player.BOT;
+        //game.gameBoard[4][3] = Player.BOT;
+        ////game.gameBoard[1][4] = Player.BOT;
+        //game.gameBoard[2][4] = Player.BOT;
+        //game.gameBoard[3][4] = Player.BOT;
 
         //game.setLevel(4);
         game.currentPlayer = Player.BOT;

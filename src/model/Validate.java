@@ -48,4 +48,8 @@ public class Validate {
         }
     }
 
+    public static boolean colIsNotFull(Game game, int col) {
+        boolean b = game.getSlot(0, col - 1) == Player.NOBODY;
+        return b;
+    }
 }

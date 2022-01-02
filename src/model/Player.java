@@ -3,13 +3,13 @@ package model;
 /** Models the players of a {@link Game}. */
 public enum Player {
 
-    /** human */
+    /** Representation for human. */
     HUMAN("X"),
 
-    /** bot */
+    /** Representation for bot. */
     BOT("O"),
 
-    /** no one */
+    /** Representation for no one. */
     NOBODY(".");
 
     private final String player;

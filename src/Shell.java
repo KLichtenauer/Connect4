@@ -20,7 +20,6 @@
             execute(reader);
         }
 
-        // TODO: 17.12.2021 Ausgabe für gewonnenes Spiel 
         private static void execute(BufferedReader reader) throws IOException {
             Board game = new Game(true);
             boolean programRunning = true;
@@ -28,13 +27,12 @@
                 System.out.print("connect4> ");
                 String input = reader.readLine();
                 char keyChar = ' ';
-                try {
-                    keyChar = Character.toLowerCase(input.charAt(0));
-                } catch (IndexOutOfBoundsException e) {
-                    throw new IllegalArgumentException("Input must not be" +
-                            " empty!");
-                }
+                // TODO: 22.12.2021 Muss hier clone benutzt werden?
                 String[] parts = input.split(" ");
+                String[] clone = parts.clone();
+                if(inputIsValid(clone)) {
+                    keyChar = Character.toLowerCase(input.charAt(0));
+                }
                 switch (keyChar) {
                     case 'l':
                         regulateLevel(parts, game);
@@ -76,6 +74,10 @@
             }
         }
 
+        private static boolean inputIsValid(String[] parts) {
+            return false;
+        }
+
         private static void regulateWitness(Board game) {
             if(game != null && game.getWitness() != null) {
                 Set<Coordinates2D> set = (Set<Coordinates2D>) game.getWitness();
@@ -85,7 +87,7 @@
                     builder.append(", ");
                 }
                 builder.append(set.toArray()[3].toString());
-                System.out.println(builder.toString());
+                System.out.println(builder);
             } else {
                 error("No witness found.");
             }
