@@ -1,4 +1,4 @@
-package model;
+package connect4.model;
 
 /** Models the players of a {@link Game}. */
 public enum Player {

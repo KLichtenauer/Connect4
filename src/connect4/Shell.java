@@ -1,60 +1,93 @@
-    import model.*;
+package connect4;
 
-    import javax.swing.*;
+import connect4.model.Board;
+    import connect4.model.Coordinates2D;
+    import connect4.model.Game;
+    import connect4.model.Player;
+    import connect4.model.Validate;
+
     import java.io.BufferedReader;
     import java.io.IOException;
     import java.io.InputStreamReader;
     import java.util.Set;
 
-
     /**
      * Communicates with the user
      */
-    public class Shell {
+    public final class Shell {
+
+        /**
+         * The needed integer-values for the commands move and level are located
+         * in the second part of the command "move x". Because the inputs get
+         * split and put in arrays, the index of the value is 1.
+         */
         private static final int INDEX_OF_VALUE = 1;
+
+        /**
+         * The default level for every game is 4.
+         */
+        private static final int DEFAULT_LEVEL = 4;
 
         private Shell() {}
 
+        /**
+         * The applications' entry point. Creates a new buffered reader to be
+         * able to process the users input. Calls
+         * {@link #execute(BufferedReader)} for managing the core part of the
+         * program.
+         *
+         * @param args Command-line arguments.
+         * @throws IOException Gets thrown if buffered reader can't read a line.
+         */
         public static void main(String[] args) throws IOException {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    System.in));
             execute(reader);
         }
 
+        /**
+         * Manages each input of the user by splitting it to a string array and
+         * depending on the first letter the corresponding action happens. If
+         * not,the users gave an invalid input and a matching error message will
+         * be shown.
+         *
+         * @param reader The reader for processing the users input.
+         * @throws IOException Gets thrown if buffered reader can't read a line.
+         */
         private static void execute(BufferedReader reader) throws IOException {
-            Board game = new Game(true);
+            int setLevel = DEFAULT_LEVEL;
+            Board game = new Game(true, setLevel);
             boolean programRunning = true;
             while (programRunning) {
                 System.out.print("connect4> ");
                 String input = reader.readLine();
                 char keyChar = ' ';
-                // TODO: 22.12.2021 Muss hier clone benutzt werden?
                 String[] parts = input.split(" ");
-                String[] clone = parts.clone();
-                if(inputIsValid(clone)) {
+                if (!input.isEmpty()) {
                     keyChar = Character.toLowerCase(input.charAt(0));
                 }
                 switch (keyChar) {
                     case 'l':
-                        regulateLevel(parts, game);
+                        setLevel = regulateLevel(parts, game);
                         break;
                     case 'm':
-                        game = regulateMove(parts, game);
-                        if(game != null) {
-                            if(!game.isGameOver()) {
+                        Game gameAfterMove = (Game) regulateMove(parts, game);
+                        if (gameAfterMove != null) {
+                            game = gameAfterMove;
+                            if (!game.isGameOver()) {
                                 game = game.machineMove();
-                                System.out.println(game);
                             }
-                            if(game.isGameOver()) {
+                            if (game.isGameOver()) {
                                 regulateGameEnd(game);
                             }
                         }
                         break;
                     case 'n':
-                        game = new Game(true);
+                        game = new Game(true, setLevel);
                         break;
                     case 's':
                         assert game != null;
-                        game = regulateSwitch(game);
+                        game = regulateSwitch(game, setLevel);
                         break;
                     case 'w':
                         regulateWitness(game);
@@ -74,12 +107,8 @@
             }
         }
 
-        private static boolean inputIsValid(String[] parts) {
-            return false;
-        }
-
         private static void regulateWitness(Board game) {
-            if(game != null && game.getWitness() != null) {
+            if (game != null && game.getWitness() != null) {
                 Set<Coordinates2D> set = (Set<Coordinates2D>) game.getWitness();
                 StringBuilder builder = new StringBuilder();
                 for (int i = 0; i < 3; i++) {
@@ -95,10 +124,10 @@
 
         private static void regulateGameEnd(Board game) {
             Player winner = game.getWinner();
-            if(winner == Player.HUMAN) {
+            if (winner == Player.HUMAN) {
                 System.out.println("Congratulations! You won.");
-            } else if(winner == Player.BOT) {
-                System.out.println("Sorry! Machine wins");
+            } else if (winner == Player.BOT) {
+                System.out.println("Sorry! Machine wins.");
             } else {
                 System.out.println("Nobody wins. Tie.");
             }
@@ -107,45 +136,54 @@
         private static Board regulateMove(String[] parts, Board game) {
             assert parts != null && game != null;
             int chosenCol = getValue(parts);
-            if(Validate.colIsValid(chosenCol)) {
-                return game.move(chosenCol);
+            Board gameAfterMove = null;
+            if (Validate.colIsValid(chosenCol) && !game.isGameOver()) {
+                gameAfterMove = game.move(chosenCol);
             } else {
-                return null;
+                error("Invalid move!");
             }
+            return gameAfterMove;
         }
 
-        private static void regulateLevel(String[] parts, Board game) {
+        private static int regulateLevel(String[] parts, Board game) {
             assert parts != null && game != null;
             int levelToBeSet = getValue(parts);
             if (Validate.levelIsValid(levelToBeSet)) {
                 game.setLevel(levelToBeSet);
+            } else {
+                error("Given level is invalid.");
             }
+            return levelToBeSet;
         }
 
-        private static Game regulateSwitch(Board game) {
+        private static Game regulateSwitch(Board game, int setLevel) {
             assert game != null;
             Game newGame;
-            if(game.getFirstPlayer() == Player.HUMAN) {
-                newGame = new Game(false);
-                newGame = (Game) newGame.machineMove();
-            } else {
-                newGame = new Game(true);
-            }
+            boolean isFirstPlayerHuman = game.getFirstPlayer() == Player.HUMAN;
+                newGame = new Game(!isFirstPlayerHuman, setLevel);
+                newGame.setLevel(setLevel);
+                if (isFirstPlayerHuman) {
+                    newGame = (Game) newGame.machineMove();
+                }
             return newGame;
         }
 
         private static int getValue(String[] parts) {
             assert parts != null;
             String value;
-            int returnValue = 0;
-            try {
+            // Choosing an invalid return value, so if input is invalid and no
+            // value can be read an invalid value gets returned, because the
+            // methods who use this method can't use the value and the input
+            // won't be used.
+            int returnValue = Integer.MAX_VALUE;
+            if (parts.length < 2) {
+                error("Command not correct, pleas use <HELP> if "
+                        + "commands are not known.");
+            } else {
                 value = parts[INDEX_OF_VALUE];
-            } catch (IndexOutOfBoundsException e) {
-                throw new IllegalArgumentException("Command not correct, pleas "
-                        + "use <HELP> if commands are not known.");
-            }
-            if (isInteger(value)) {
-                returnValue = Integer.parseInt(value);
+                if (isInteger(value)) {
+                    returnValue = Integer.parseInt(value);
+                }
             }
             return returnValue;
         }
@@ -160,17 +198,16 @@
                     break;
                 }
             }
-
             return isInt;
         }
 
-        private static String errorMessage(){
-            return ("Make sure you use the correct" +
-                    " commands! \nIf you need help with the commands just " +
-                    "type HELP in the commandline ");
+        private static String errorMessage() {
+            return ("Make sure you use the correct"
+                    + " commands! \nIf you need help with the commands just "
+                    + "type HELP in the commandline ");
         }
 
-        private static void helpInMain(){
+        private static void helpInMain() {
             System.out.println(
                     """
                         Following commands can be used in this program:
@@ -192,7 +229,7 @@
                             """);
         }
 
-        private static void error(String errorMessage){
+        private static void error(String errorMessage) {
             System.out.println("Error! " + errorMessage);
         }
     }

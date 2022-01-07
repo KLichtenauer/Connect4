@@ -1,4 +1,4 @@
-package model;
+package connect4.model;
 
 /**
  * This class represents the location of tiles in a readable form and makes it

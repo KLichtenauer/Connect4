@@ -1,4 +1,4 @@
-package model;
+package connect4.model;
 
 import java.util.Collection;
 
