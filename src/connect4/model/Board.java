@@ -43,7 +43,7 @@ public interface Board extends Cloneable {
      *         i.e. {@code col} was full before, then {@code null} will be
      *         returned.
      * @throws IllegalMoveException The game is already over, or it is not the
-     *         the human's turn.
+     *         human's turn.
      * @throws IllegalArgumentException The provided column {@code col} is
      *         invalid, i.e. not found on the grid.
      */
@@ -56,7 +56,7 @@ public interface Board extends Cloneable {
      *
      * @return A new board with the move executed.
      * @throws IllegalMoveException The game is already over, or it is not the
-     *         the machine's turn.
+     *         machine's turn.
      */
     Board machineMove();
 

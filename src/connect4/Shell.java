@@ -9,7 +9,8 @@ import connect4.model.Board;
     import java.io.BufferedReader;
     import java.io.IOException;
     import java.io.InputStreamReader;
-    import java.util.Set;
+    import java.util.List;
+
 
     /**
      * Communicates with the user
@@ -109,13 +110,14 @@ import connect4.model.Board;
 
         private static void regulateWitness(Board game) {
             if (game != null && game.getWitness() != null) {
-                Set<Coordinates2D> set = (Set<Coordinates2D>) game.getWitness();
+                List<Coordinates2D> list =
+                        (List<Coordinates2D>) game.getWitness();
                 StringBuilder builder = new StringBuilder();
                 for (int i = 0; i < 3; i++) {
-                    builder.append(set.toArray()[i].toString());
+                    builder.append(list.get(i).toString());
                     builder.append(", ");
                 }
-                builder.append(set.toArray()[3].toString());
+                builder.append(list.get(3).toString());
                 System.out.println(builder);
             } else {
                 error("No witness found.");
@@ -123,6 +125,7 @@ import connect4.model.Board;
         }
 
         private static void regulateGameEnd(Board game) {
+            assert game != null;
             Player winner = game.getWinner();
             if (winner == Player.HUMAN) {
                 System.out.println("Congratulations! You won.");
@@ -137,11 +140,16 @@ import connect4.model.Board;
             assert parts != null && game != null;
             int chosenCol = getValue(parts);
             Board gameAfterMove = null;
-            if (Validate.colIsValid(chosenCol) && !game.isGameOver()) {
-                gameAfterMove = game.move(chosenCol);
+            if (!Validate.colIsValid(chosenCol) || game.isGameOver()) {
+                error("Invalid column given!");
             } else {
-                error("Invalid move!");
+                gameAfterMove = game.move(chosenCol);
+                if (gameAfterMove == null) {
+                    error("Move not possible. Please try again with "
+                            + "another column.");
+                }
             }
+
             return gameAfterMove;
         }
 
@@ -171,10 +179,12 @@ import connect4.model.Board;
         private static int getValue(String[] parts) {
             assert parts != null;
             String value;
-            // Choosing an invalid return value, so if input is invalid and no
-            // value can be read an invalid value gets returned, because the
-            // methods who use this method can't use the value and the input
-            // won't be used.
+            /*
+             * Choosing an invalid return value, so if input is invalid and no
+             * value can be read an invalid value gets returned, because the
+             * methods who use this method can't use the value and the input
+             * won't be used.
+             */
             int returnValue = Integer.MAX_VALUE;
             if (parts.length < 2) {
                 error("Command not correct, pleas use <HELP> if "
@@ -188,13 +198,20 @@ import connect4.model.Board;
             return returnValue;
         }
 
+        /**
+         * Checks if given {@code String} can be transformed to an
+         * {@code Integer}.
+         *
+         * @param part The part of {@code String} to be checked.
+         * @return If the part can be transformed {@code true}, {@code false}
+         *         otherwise.
+         */
         private static boolean isInteger(String part) {
             assert part != null;
             boolean isInt = true;
             for (int i = 0; i < part.length(); i++) {
                 if (part.charAt(0) < '0' || part.charAt(0) > '9') {
                     isInt = false;
-                    error("Invalid input! Integer needed!");
                     break;
                 }
             }

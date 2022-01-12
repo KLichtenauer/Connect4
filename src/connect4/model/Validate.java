@@ -40,31 +40,6 @@ public final class Validate {
     }
 
     /**
-     * Verifying if the human is allowed to move.
-     *
-     * @param game The current game in which the current player has to be
-     *             checked.
-     * @return True if current player is human, false otherwise.
-     */
-    public static boolean isHumansTurn(Game game) {
-        return game.getCurrentPlayer() == Player.HUMAN;
-    }
-
-    /**
-     * Verifying if the move chosen by the human player is valid. The move is
-     * allowed if both the chosen column still has at least one empty field to
-     * use and is a valid number.
-     *
-     * @param game The current game.
-     * @param col The chosen column for the next human move.
-     * @return True if {@link #colIsNotFull(Game, int)} and
-     *         {@link #colIsValid(int)} accept the column, false otherwise.
-     */
-    public static boolean moveIsValid(Game game, int col) {
-        return (colIsNotFull(game, col)) && colIsValid(col);
-    }
-
-    /**
      * Verifying if the chosen column is not full, by checking if the highest
      * field in the column is not free. If so the column is full and can not be
      * chosen for another move.
