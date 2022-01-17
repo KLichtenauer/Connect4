@@ -110,6 +110,9 @@ public class View {
         private final int row;
         private final int col;
 
+        String invalidMove = "Invalid move";
+        String gameOver = "Game over";
+
         private Slot( int row, int col) {
             this.row = row;
             this.col = col;
@@ -134,8 +137,7 @@ public class View {
              */
 
             public void mouseClicked(MouseEvent e) {
-                String invalidMove = "Invalid move";
-                String gameOver = "Game over";
+
                 if (game.isGameOver()) {
                     popup("Invalid move, the game is already"
                                     + " over.",
@@ -156,17 +158,17 @@ public class View {
                         }
                     } else {
                         game = gameAfterMove;
-                        game = regulateMachineMove();
+                        regulateMachineMove();
 
                         //game = gameAfterMove.machineMove();
-                        if (game.isGameOver()) {
-                            if (game.getWinner() == Player.BOT) {
-                                popup("The bot won, good luck"
-                                        + " next time.", gameOver);
-                            } else {
-                                popup("Tie", gameOver);
-                            }
-                        }
+                        //if (game.isGameOver()) {
+                            //    if (game.getWinner() == Player.BOT) {
+                                //        popup("The bot won, good luck"
+                                //                + " next time.", gameOver);
+                                //    } else {
+                                //        popup("Tie", gameOver);
+                                //    }
+                            //}
                     }
                     board.repaint();
                 }
@@ -254,17 +256,23 @@ public class View {
                 @Override
                 public void run() {
                     while (threadIsRunning) {
-                        for (int i = 0; i < 1; i++) {
-                            System.out.println(i);
+                        game = game.machineMove();
+                        if (game.isGameOver()) {
+                            if (game.getWinner() == Player.BOT) {
+                                popup("The bot won, good luck"
+                                        + " next time.", gameOver);
+                            } else {
+                                popup("Tie", gameOver);
+                            }
                         }
-
                         try {
-                            Thread.sleep(420);
-                            boardAfterMove = game.machineMove();
+                            Thread.sleep(1);
+
                         } catch (InterruptedException e) {
                             exit();
                         }
                         exit();
+                        board.repaint();
                     }
 
                 }
