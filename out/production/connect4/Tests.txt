@@ -350,6 +350,174 @@ connect4> p
 . O O O X O X
 . X X O O X O
 
-connect4>
+connect4> n
+connect4> l 4
+connect4> n
+connect4> m 4
+connect4> m 4
+connect4> m 4
+connect4> p
+. . . . . . .
+. . . X . . .
+. . . O . . .
+. . . X . . .
+. . . O . . .
+. . O X . . .
+
+connect4> m 5
+connect4> p
+. . . . . . .
+. . . X . . .
+. . . O . . .
+. . . X . . .
+. . O O . . .
+. . O X X . .
+
+connect4> m 5
+connect4> p
+. . . . . . .
+. . . X . . .
+. . . O . . .
+. . . X O . .
+. . O O X . .
+. . O X X . .
+
+connect4> m 3
+connect4> p
+. . . . . . .
+. . . X . . .
+. . . O . . .
+. . X X O . .
+. . O O X . .
+. . O X X O .
+
+connect4> m 3
+connect4> p
+. . . . . . .
+. . O X . . .
+. . X O . . .
+. . X X O . .
+. . O O X . .
+. . O X X O .
+
+connect4> m 6
+connect4> p
+. . . . . . .
+. . O X . . .
+. . X O . . .
+. . X X O O .
+. . O O X X .
+. . O X X O .
+
+connect4> m 6
+connect4> p
+. . . . . . .
+. . O X . . .
+. . X O O X .
+. . X X O O .
+. . O O X X .
+. . O X X O .
+
+connect4> m 4
+connect4> p
+. . . X . . .
+. . O X O . .
+. . X O O X .
+. . X X O O .
+. . O O X X .
+. . O X X O .
+
+connect4> m 5
+connect4> p
+. . O X X . .
+. . O X O . .
+. . X O O X .
+. . X X O O .
+. . O O X X .
+. . O X X O .
+
+connect4> m 7
+connect4> p
+. . O X X . .
+. . O X O . .
+. . X O O X .
+. . X X O O .
+. . O O X X O
+. . O X X O X
+
+connect4> m 7
+connect4> p
+. . O X X . .
+. . O X O . .
+. . X O O X .
+. . X X O O X
+. . O O X X O
+. O O X X O X
+
+connect4> m 2
+connect4> p
+. . O X X . .
+. . O X O . .
+. . X O O X .
+. O X X O O X
+. X O O X X O
+. O O X X O X
+
+connect4> m 1
+connect4> p
+. . O X X . .
+. . O X O . .
+. . X O O X .
+. O X X O O X
+O X O O X X O
+X O O X X O X
+
+connect4> m 2
+connect4> p
+. . O X X . .
+. O O X O . .
+. X X O O X .
+. O X X O O X
+O X O O X X O
+X O O X X O X
+
+connect4> m 2
+connect4> p
+. X O X X . .
+. O O X O . .
+. X X O O X .
+O O X X O O X
+O X O O X X O
+X O O X X O X
+
+connect4> m 1
+connect4> p
+. X O X X . .
+O O O X O . .
+X X X O O X .
+O O X X O O X
+O X O O X X O
+X O O X X O X
+
+connect4> m 1
+connect4> p
+X X O X X . .
+O O O X O O .
+X X X O O X .
+O O X X O O X
+O X O O X X O
+X O O X X O X
+
+connect4> m 7
+connect4> p
+X X O X X O .
+O O O X O O .
+X X X O O X X
+O O X X O O X
+O X O O X X O
+X O O X X O X
+
+connect4> m 7
+Nobody wins. Tie.
 connect4> q
 

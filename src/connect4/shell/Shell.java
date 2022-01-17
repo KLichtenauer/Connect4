@@ -1,4 +1,4 @@
-package connect4;
+package connect4.shell;
 
 import connect4.model.Board;
     import connect4.model.Coordinates2D;
@@ -145,8 +145,8 @@ import connect4.model.Board;
             } else {
                 gameAfterMove = game.move(chosenCol);
                 if (gameAfterMove == null) {
-                    error("Move not possible. Please try again with "
-                            + "another column.");
+                    error("Move not possible. Please try again with"
+                            + " another column.");
                 }
             }
 
