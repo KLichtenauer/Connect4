@@ -19,12 +19,30 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
-import static java.lang.Thread.sleep;
+import static java.awt.RenderingHints.*;
 
+/**
+ * The view is responsible for the creation of the user interaction platform and
+ * its management. It is build up by a {@code JFrame} and {@code JPanel} for the
+ * basic fundament. The {@code JPanel} gets a border layout. The board will be
+ * implemented in the north and the settings bar in the south of the border
+ * layout.
+ * Moves will be managed by repainting the board after each move. The bot-move
+ * is running parallel for maintaining the ability to interact with the settings
+ * panel while a move gets calculated.
+ */
 public class View {
+    private static final double FACTOR_FOR_TILE = 0.94;
+    private static final String invalidMove = "Invalid move";
+    private static final String gameOver = "Game over";
 
     // TODO: 16.01.2022 Quitbutton
     // TODO: 16.01.2022 Thread
@@ -33,19 +51,23 @@ public class View {
     // foundation frame
     private JFrame frame;
 
+    // Predefined colors for each element
     private final static Color BACKGROUND = Color.BLUE;
     private final static Color HUMAN_CHIP = Color.YELLOW;
     private final static Color BOT_CHIP = Color.RED;
     private final static Color NOBODY_CHIP = Color.WHITE;
+    private final static Color WITNESS = Color.DARK_GRAY;
+    private final static Color CIRCLE = Color.BLACK;
 
-
+    // Attributes needed for the controller classes interaction with the model.
     private boolean isFirstPlayerHuman = true;
     private Board game = new Game(true, 4);
     private static final int DEFAULT_LEVEL = 4;
     private static int setLevel = DEFAULT_LEVEL;
     JPanel board;
 
-    Slot.moveListener.MachineThread machineThread;
+    // Attributes responsible for the machine move and the corresponding thread.
+    MachineThread machineThread;
     Board boardAfterMove;
 
     /**
@@ -56,20 +78,22 @@ public class View {
     }
 
     /**
-     *
+     * Initializes the components of the view.
      */
     private void initComponents() {
+        // Container for game board and option panel.
         frame = new JFrame();
-        // container for game board and option panel
         Container container = frame.getContentPane();
+        frame.setPreferredSize(new Dimension(720, 600));
         container.setLayout(new BorderLayout());
         container.setVisible(true);
-        // panel, containing the board
+        // Panel which is containing the board.
         board = new BoardPanel();
         container.add(board, BorderLayout.CENTER);
-        // panel, containing all 
+        // Panel which is containing all components of the settings section.
         JPanel settings = new SettingsPanel();
         container.add(settings, BorderLayout.SOUTH);
+        // Standard commands for the frame.
         frame.pack();
         frame.setTitle("connect4");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -83,13 +107,19 @@ public class View {
      */
     private class BoardPanel extends JPanel {
 
-
+        /**
+         * Constructs the panel which contains the game board by calling
+         * {@link #initBoardPanel()}.
+         */
         private BoardPanel() {
             initBoardPanel();
         }
 
+        /**
+         * Sets the background, basic settings and body of {@code this} panel.
+         */
         private void initBoardPanel() {
-            setPreferredSize(new Dimension(720, 720));
+            setSize(getPreferredSize());
             setLayout(new GridLayout(Board.ROWS, Board.COLS));
             setVisible(true);
             setBackground(BACKGROUND);
@@ -97,6 +127,9 @@ public class View {
             repaint();
         }
 
+        /**
+         * Sets a {@code Slot} in each panel of the board.
+         */
         private void fillingBoard() {
             for (int row = 0; row < Board.ROWS; row++) {
                 for (int col = 0; col < Board.COLS; col++) {
@@ -109,9 +142,6 @@ public class View {
     private class Slot extends JPanel {
         private final int row;
         private final int col;
-
-        String invalidMove = "Invalid move";
-        String gameOver = "Game over";
 
         private Slot( int row, int col) {
             this.row = row;
@@ -137,7 +167,6 @@ public class View {
              */
 
             public void mouseClicked(MouseEvent e) {
-
                 if (game.isGameOver()) {
                     popup("Invalid move, the game is already"
                                     + " over.",
@@ -230,69 +259,6 @@ public class View {
                 machineThread.start();
                 */
 
-
-            private Board regulateMachineMove() {
-                // TODO: 16.01.2022 Thread muss global gespeichert werden, dass
-                //  man ihn mit quit beenden kann
-                machineThread = new MachineThread();
-                Thread thread = new Thread(machineThread);
-                //thread.start();
-                machineThread.start();
-                Board board = boardAfterMove;
-                return boardAfterMove;
-            }
-
-            class MachineThread extends Thread {
-                boolean threadIsRunning = true;
-                Thread thread;
-
-
-                MachineThread() {
-                //    thread = new Thread(this);
-                //    machineThread = this;
-                //    thread.start();
-                }
-
-                @Override
-                public void run() {
-                    while (threadIsRunning) {
-                        game = game.machineMove();
-                        if (game.isGameOver()) {
-                            if (game.getWinner() == Player.BOT) {
-                                popup("The bot won, good luck"
-                                        + " next time.", gameOver);
-                            } else {
-                                popup("Tie", gameOver);
-                            }
-                        }
-                        try {
-                            Thread.sleep(1);
-
-                        } catch (InterruptedException e) {
-                            exit();
-                        }
-                        exit();
-                        board.repaint();
-                    }
-
-                }
-
-                public void exit() {
-                    threadIsRunning = false;
-                }
-            }
-
-
-            /**
-             * Creates a popup with message and title.
-             *
-             * @param message The message the popup should contain.
-             * @param title The title the popup should get.
-             */
-            private void popup(String message, String title) {
-                JOptionPane.showConfirmDialog(frame, message, title,
-                        JOptionPane.DEFAULT_OPTION);
-            }
         }
 
         /**
@@ -300,33 +266,46 @@ public class View {
          * with circles. The color of the circles depends on who owns the
          * observed tile.
          *
-         * @param graphics
+         * @param graphics The graphics to paint.
          */
         @Override
         public void paintComponent(Graphics graphics) {
             super.paintComponent(graphics);
             Graphics2D g2D = (Graphics2D) graphics;
-            RenderingHints renderingHints = new RenderingHints(
-                                            RenderingHints.KEY_ANTIALIASING,
-                                            RenderingHints.VALUE_ANTIALIAS_ON);
-            renderingHints.put(RenderingHints.KEY_RENDERING,
-                               RenderingHints.VALUE_RENDER_QUALITY);
+            RenderingHints renderingHints = new RenderingHints(KEY_ANTIALIASING,
+                                            VALUE_ANTIALIAS_ON);
+            renderingHints.put(KEY_RENDERING, VALUE_RENDER_QUALITY);
             g2D.setRenderingHints(renderingHints);
             g2D.setPaint(getColor(row, col));
-            int diameter =  (int) (getWidth() * 0.94);
-            g2D.fillOval(0,0, diameter, diameter);
+            g2D.fillOval(0,0, getAdjustedWidth(), getAdjustedHeight());
+            g2D.setPaint(CIRCLE);
+            g2D.drawOval(0, 0, getAdjustedWidth(), getAdjustedHeight());
+            paintWitness(g2D);
+        }
+
+        private void paintWitness(Graphics2D g2D) {
             List<Coordinates2D> coords =
-                    (List<Coordinates2D>) View.this.game.getWitness();
+                    (List<Coordinates2D>) game.getWitness();
             if (coords != null) {
                 Coordinates2D c = new Coordinates2D(row, col);
                 if (coords.contains(c)) {
-                    g2D.setPaint(Color.BLACK);
-                    int diameterOfWitness = diameter / 2;
-                    int coordinateOfWitness = this.getWidth() / 4;
-                    g2D.fillOval(coordinateOfWitness, coordinateOfWitness,
-                            diameterOfWitness, diameterOfWitness);
+                    g2D.setPaint(WITNESS);
+                    int diameterOfWitness = getAdjustedWidth() / 2;
+                    int heightOfWitness = getAdjustedHeight() / 2;
+                    int xOfWitness = getWidth() / 4;
+                    int yOfWitness = getHeight() / 4;
+                    g2D.fillOval(xOfWitness, yOfWitness, diameterOfWitness,
+                            heightOfWitness);
                 }
             }
+        }
+
+        private int getAdjustedWidth() {
+            return (int) (getWidth() * FACTOR_FOR_TILE);
+        }
+
+        private int getAdjustedHeight() {
+            return (int)  (getHeight() * FACTOR_FOR_TILE);
         }
 
         /**
@@ -347,6 +326,66 @@ public class View {
             };
         }
     }
+
+    private void regulateMachineMove() {
+        machineThread = new MachineThread();
+        machineThread.start();
+    }
+
+    class MachineThread extends Thread {
+        boolean threadIsRunning = true;
+
+        /**
+         * Performs the machine move for the thread. Gets called when
+         * the thread gets started.
+         */
+        @Override
+        public void run() {
+            while (threadIsRunning) {
+                try {
+                    game = game.machineMove();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (game.isGameOver()) {
+                    if (game.getWinner() == Player.BOT) {
+                        popup("The bot won, good luck"
+                                + " next time.", gameOver);
+                    } else {
+                        popup("Tie", gameOver);
+                    }
+                }
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                // TODO: 20.01.2022 Was soll das bringen / machen?
+                exit();
+                board.repaint();
+            }
+        }
+
+        /**
+         * Stops the thread.
+         */
+        public void exit() {
+            threadIsRunning = false;
+        }
+    }
+
+
+    /**
+     * Creates a popup with message and title.
+     *
+     * @param message The message the popup should contain.
+     * @param title The title the popup should get.
+     */
+    private void popup(String message, String title) {
+        JOptionPane.showConfirmDialog(frame, message, title,
+                JOptionPane.DEFAULT_OPTION);
+    }
+
 
     /**
      * Responsible for the segment containing the settings.
@@ -390,11 +429,12 @@ public class View {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (machineThread != null) {
-                    machineThread.exit();
+                    machineThread.interrupt();
                 }
                 game = new Game(isFirstPlayerHuman, setLevel);
                 if (!isFirstPlayerHuman) {
-                    game = game.machineMove();
+                    machineThread = new MachineThread();
+                    machineThread.start();
                 }
                 board.repaint();
             }
@@ -435,19 +475,18 @@ public class View {
 
             /**
              * Sets the games intern and views current level.
+             *
              * @param newLevel The level to be set.
              */
             private void setLevel(int newLevel) {
-                if (game == null) {
-                    game = new Game(true, DEFAULT_LEVEL);
+                if (game != null) {
+                    setLevel = newLevel;
+                    game.setLevel(setLevel);
                 }
-                setLevel = newLevel;
-                game.setLevel(setLevel);
             }
         }
 
         private class SwitchGame extends JButton implements ActionListener {
-
             /**
              * Creates the {@code JButton} by setting the text.
              **/
@@ -470,19 +509,27 @@ public class View {
              */
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (machineThread != null) {
+                    machineThread.interrupt();
+                }
                 game = new Game(!isFirstPlayerHuman, setLevel);
                 isFirstPlayerHuman = !isFirstPlayerHuman;
                 if (!isFirstPlayerHuman) {
-                    game = game.machineMove();
+                   machineThread = new MachineThread();
+                   machineThread.start();
                 }
                 board.repaint();
             }
         }
 
+        /**
+         *  Button is responsible for closing the window and ending any running
+         *  thread when pressed.
+         */
         private class QuitGame extends JButton implements ActionListener {
 
             /**
-             *
+             * Creates button for quitting the game.
              */
             public QuitGame() {
                 setText("Quit");
@@ -496,7 +543,6 @@ public class View {
              */
             @Override
             public void actionPerformed(ActionEvent e) {
-                machineThread.exit();
                 frame.dispose();
             }
         }

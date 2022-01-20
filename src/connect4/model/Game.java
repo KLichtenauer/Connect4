@@ -120,7 +120,7 @@ public class Game implements Board {
      * {@inheritDoc}
      */
     @Override
-    public Board machineMove() {
+    public Board machineMove() throws InterruptedException {
         if (!gameIsRunning || currentPlayer != Player.BOT) {
             throw new IllegalMoveException();
         }
@@ -162,14 +162,17 @@ public class Game implements Board {
      * @return The {@code Node} of the simulated moves with the best outcome for
      *         the bot.
      */
-    private Node buildUpGameTree(int currentLevel) {
+    private Node buildUpGameTree(int currentLevel) throws InterruptedException {
         Node recursNode;
         Game forNode = null;
         int chosenCol;
-        int currentValue = evaluateGame(isFirstMove());
+        int currentValue = evaluateGame(currentLevel == level - 1);
         Player currentPlayer = getCurrentPlayer();
         boolean isHumanMove = currentPlayer == Player.HUMAN;
         int bestValue = isHumanMove ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
         if (currentLevel == 0) {
             recursNode = new Node(currentValue, this);
         } else {
@@ -193,7 +196,6 @@ public class Game implements Board {
                     }
                 }
             }
-
             currentValue = currentLevel != level ? currentValue + bestValue
                     : bestValue;
             recursNode = new Node(currentValue, forNode);
@@ -211,7 +213,8 @@ public class Game implements Board {
      *                     dedicated on.
      * @return {@code Node} after recursions of lower levels come back.
      */
-    private Node createChild(int col, int currentLevel) {
+    private Node createChild(int col, int currentLevel) throws
+            InterruptedException {
         assert Validate.colIsValid(col);
         Game boardAfterMove;
         /*
@@ -611,7 +614,7 @@ public class Game implements Board {
                         if (groupChanged) {
                             setWitness(row, col - 1, group);
                         } else {
-                            setWitness(row, col, group);
+                            setWitness(row - 1, col, group);
                         }
                     }
                     typeOfCurrentGroup = currentField;

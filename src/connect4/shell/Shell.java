@@ -40,7 +40,7 @@ import connect4.model.Board;
          * @param args Command-line arguments.
          * @throws IOException Gets thrown if buffered reader can't read a line.
          */
-        public static void main(String[] args) throws IOException {
+        public static void main(String[] args) throws IOException, InterruptedException {
             BufferedReader reader = new BufferedReader(new InputStreamReader(
                     System.in));
             execute(reader);
@@ -55,7 +55,8 @@ import connect4.model.Board;
          * @param reader The reader for processing the users input.
          * @throws IOException Gets thrown if buffered reader can't read a line.
          */
-        private static void execute(BufferedReader reader) throws IOException {
+        private static void execute(BufferedReader reader) throws IOException,
+                InterruptedException {
             int setLevel = DEFAULT_LEVEL;
             Board game = new Game(true, setLevel);
             boolean programRunning = true;
@@ -164,7 +165,7 @@ import connect4.model.Board;
             return levelToBeSet;
         }
 
-        private static Game regulateSwitch(Board game, int setLevel) {
+        private static Game regulateSwitch(Board game, int setLevel) throws InterruptedException {
             assert game != null;
             Game newGame;
             boolean isFirstPlayerHuman = game.getFirstPlayer() == Player.HUMAN;

@@ -40,12 +40,12 @@ public interface Board extends Cloneable {
      *
      * @param col The column where to put the tile of the human.
      * @return A new board with the move executed. If the move is not valid,
-     *         i.e. {@code col} was full before, then {@code null} will be
+     *         i.e., {@code col} was full before, then {@code null} will be
      *         returned.
      * @throws IllegalMoveException The game is already over, or it is not the
-     *         human's turn.
+     *         the human's turn.
      * @throws IllegalArgumentException The provided column {@code col} is
-     *         invalid, i.e. not found on the grid.
+     *         invalid, i.e., not found on the grid.
      */
     Board move(int col);
 
@@ -56,9 +56,11 @@ public interface Board extends Cloneable {
      *
      * @return A new board with the move executed.
      * @throws IllegalMoveException The game is already over, or it is not the
-     *         machine's turn.
+     *         the machine's turn.
+     * @throws InterruptedException {@link Thread#interrupt()} was called on the
+     *         executing thread. Thus, the execution stops prematurely.
      */
-    Board machineMove();
+    Board machineMove() throws InterruptedException;
 
     /**
      * Sets the skill level of the machine.
@@ -124,4 +126,5 @@ public interface Board extends Cloneable {
      */
     @Override
     String toString();
+
 }
