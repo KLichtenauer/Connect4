@@ -78,9 +78,6 @@ public record Coordinates2D(int row,
         if (o instanceof Coordinates2D) {
             isEqual = ((Coordinates2D) o).getCol() == col
                     && ((Coordinates2D) o).getRow() == row;
-            System.out.println(true);
-        } else {
-            System.out.println("wtf man pls just work");
         }
         return isEqual;
     }

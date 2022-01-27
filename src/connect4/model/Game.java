@@ -614,7 +614,12 @@ public class Game implements Board {
                         if (groupChanged) {
                             setWitness(row, col - 1, group);
                         } else {
-                            setWitness(row - 1, col, group);
+                            if (isAscending) {
+                                setWitness(row - 1, col, group);
+
+                            } else {
+                                setWitness(row, col, group);
+                            }
                         }
                     }
                     typeOfCurrentGroup = currentField;
