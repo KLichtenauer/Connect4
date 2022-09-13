@@ -1,17 +1,22 @@
 package connect4;
 
-import connect4.view.View;
+import connect4.view.MainFrame;
 
-import javax.swing.*;
+import javax.swing.SwingUtilities;
 
-public class Run {
+/**
+ * Runs the connect-4 gui application.
+ */
+public final class Run {
+
+    private Run() {}
+
+    /**
+     * The applications' entry point.
+     *
+     * @param args Command-line arguments.
+     */
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(View::new);
-        //SwingUtilities.invokeLater(new Runnable() {
-        //    @Override
-        //    public void run() {
-        //        new View();
-        //    }
-        //});
+        SwingUtilities.invokeLater(MainFrame::new);
     }
 }

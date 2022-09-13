@@ -1,6 +1,5 @@
 package connect4.model;
 
-import java.awt.*;
 import java.util.Objects;
 
 /**
